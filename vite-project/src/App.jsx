@@ -34,8 +34,12 @@ function App() {
     {isGameComplete && <WinMessage moves = {moves}/>}
 
     <div className="cards-grid">
-      {cardValues.map((card) => (
-        <Card card={card} onClick={() => handleCardClick(card)} key = {card.id}/>
+      {cards.map((card) => (
+        <Card 
+          key = {card.id}  
+          card={card} 
+          onClick={() => handleCardClick(card)} 
+        />
       ))}
     </div>
   </div>

@@ -11,7 +11,7 @@ export const useGameLogic = (cardValues) => {
     const shuffleArray = (array) => {
         const shuffled = [...array];
         for (let i = shuffled.length -1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i = 1));
+            const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         return shuffled;
@@ -59,7 +59,6 @@ export const useGameLogic = (cardValues) => {
     setFlippedCards(newFlippedCards);
 
     // Check for match if 2 cards are flipped
-
     if(flippedCards.length === 1) {
         setIsLocked(true);
         const firstCard = cards[flippedCards[0]];
@@ -82,10 +81,9 @@ export const useGameLogic = (cardValues) => {
         } else {
         
         // flip back card 1, card 2
-
         setTimeout(() => {
             const flippedBackCard = newCards.map((c) => {
-            if (newFlippedCards.includes(c.id) || c.id == card.id) {
+            if (newFlippedCards.includes(c.id)) {
             return {...c, isFlipped: false };
             } else {
             return c;
