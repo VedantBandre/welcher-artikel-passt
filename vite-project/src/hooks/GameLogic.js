@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const words = [
     { word: "Tisch", article: "der", level: "A1" },
@@ -11,41 +11,78 @@ const words = [
 export const useGenderGame = () => {
     const [score, setScore] = useState(0);
     const [isCorrect, setIsCorrect] = useState(null);
-
     // used for retrieving current word by index
     const [currentIndex, setCurrentIndex] = useState(0);
-    // current word from the currentIndex
-    const currentWord = words[currentIndex];
+    const [level, setLevel] = useState("A1");    
+    const [remainingWords, setRemainingWords] = useState(words);
+    const [skipNextWord, setSkipNextWord] = useState(null);
+    const timeoutRef = useRef(null);
 
-    const randomIndex = Math.floor(Math.randowm() * words.length);
+    // Word Level Filter
+    const filteredWords = words.filter((word) => word.level === level);
+    
+    const currentWord = remainingWords[currentIndex] || null;
     
     
     // Answer Checker function
     const checkAnswer = (answer) => {
-        if (answer === currentWord.article) {
-            setScore(score + 1);
-            setIsCorrect(true);
-        } else {
-            setIsCorrect(false);
+        // clear existing timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
         }
 
+        const correct = answer === currentWord.article;
+        if (correct) {
+            setScore(score + 1);
+            
+            // remove the current correctly guessed word from the list
+            setRemainingWords(prev => prev.filter((_, idx) => idx !== currentIndex)
+        );  
+        } else {
+            // remember the falsely guessed word, so its not immediately repeated
+            setSkipNextWord(currentWord);
+        }
+
+        setIsCorrect(correct); // passes if article selected is correct or not for further use
+
         // 1 secound timeout till the next word change        
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
             // reset setIsCorrect
             setIsCorrect(null);
 
-            // Randomized new index/word
-            let nextIndex;
-            do {
-                nextIndex = Math.floor(Math.random() * words.length);
-            } while (nextIndex === currentIndex); // avoids choosing duplicate indexes
+            setRemainingWords(prevWords => {
+                // False choice filter
+                let available = prevWords;
 
-            setCurrentIndex(nextIndex);
+                if (skipNextWord) {
+                    available = prevWords.filter(w => w.word !== skipNextWord.word);
+                }
+
+                // Check if the game is over
+                if (available.length === 0) {
+                    setCurrentIndex(null);
+                    alert('Game Over!');
+                    return [];
+                }
+
+                // set new Index
+                const nextIndex = Math.floor(Math.random() * available.length);
+                setCurrentIndex(nextIndex);
+                
+                setSkipNextWord(null);
+
+                return available;
+            }); 
+
+            timeoutRef.current = null; // reset ref
         }, 1000);
     };
-
-
-
-
-
-}
+    return {
+        currentWord,
+        score,
+        isCorrect,
+        checkAnswer,
+        level,
+        setLevel
+    };
+};
